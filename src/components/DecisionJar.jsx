@@ -4,7 +4,7 @@ import "./jar.css";
 function DecisionJar() {
     const [option, setOption] = useState([]);
     const [input, setInput] = useState("");
-    const [result, setResult] = useState("");
+    const [queue, setQueue] = useState([]); // ranked results instead of single result
     const inputRef = useRef(null);
 
     function Results() {
@@ -13,12 +13,14 @@ function DecisionJar() {
             return;
         }
 
-        const len = option.length;
-        console.log(len);
+        // Fisher-Yates shuffle — gives an unbiased random order
+        const shuffled = [...option];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
 
-        const showResult = Math.floor(Math.random() * len);
-
-        setResult(option[showResult]);
+        setQueue(shuffled);
     }
 
     function AddOption() {
@@ -39,11 +41,18 @@ function DecisionJar() {
         });
 
         setOption(arr);
+        setQueue([]); // clear old ranking since options changed
     }
 
     function reset() {
         setOption([]);
-        setResult("");
+        setQueue([]);
+    }
+
+    function ordinal(n) {
+        const s = ["th", "st", "nd", "rd"];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
     }
 
     useEffect(() => {
@@ -55,161 +64,92 @@ function DecisionJar() {
 
             <div className="decision-card">
 
-               
-
                 <div className="header">
-
-                    <div className="jar-icon">
-                        🎲
-                    </div>
-
+                    <div className="jar-icon">🎲</div>
                     <h1>Decision Jar</h1>
-
-                    <p>
-                        Add your options, shake the jar and let destiny decide!
-                    </p>
-
+                    <p>Add your options, shake the jar and let destiny decide!</p>
                 </div>
-
-
-                {/* ================= INPUT SECTION ================= */}
 
                 <div className="input-section">
 
-                    <label>
-                        ✎ &nbsp; Enter your option
-                    </label>
+                    <label>✎ &nbsp; Enter your option</label>
 
                     <div className="input-row">
-
                         <input
                             type="text"
                             ref={inputRef}
                             placeholder="e.g. React.js, Javascript, DSA..."
                             value={input}
-                            onChange={(e) =>
-                                setInput(e.target.value)
-                            }
+                            onChange={(e) => setInput(e.target.value)}
                         />
 
-                        <button
-                            className="add-btn"
-                            onClick={AddOption}
-                        >
+                        <button className="add-btn" onClick={AddOption}>
                             Add ＋
                         </button>
-
                     </div>
 
-
-                    {/* Reset */}
-
                     <div className="action-row">
-
                         <span className="option-count">
                             {option.length} option
                             {option.length !== 1 ? "s" : ""}
                         </span>
 
-                        <button
-                            className="reset-btn"
-                            onClick={reset}
-                        >
+                        <button className="reset-btn" onClick={reset}>
                             ↻ &nbsp; Reset
                         </button>
-
                     </div>
 
                 </div>
-
-
-     
 
                 <div className="options-section">
 
                     <div className="section-title">
-
                         <h2>
                             ☷ &nbsp; Your Options
-                            <span className="option-count">
-                                &nbsp;({option.length})
-                            </span>
+                            <span className="option-count">&nbsp;({option.length})</span>
                         </h2>
-
                     </div>
 
-
                     {option.length === 0 ? (
-
-                        /* EMPTY STATE */
-
                         <div className="empty-state">
-
                             <span>🫙</span>
-
-                            <p>
-                                No options added yet!
-                            </p>
-
-                            <small>
-                                Start by adding your first option above.
-                            </small>
-
+                            <p>No options added yet!</p>
+                            <small>Start by adding your first option above.</small>
                         </div>
-
                     ) : (
-
-                        /* OPTION LIST */
-
                         <ol>
-
                             {option.map((item, index) => (
-
                                 <li key={index}>
-
                                     {item}
-
                                     <button
                                         className="remove-btn"
-                                        onClick={() =>
-                                            remove(index)
-                                        }
+                                        onClick={() => remove(index)}
                                     >
                                         ×
                                     </button>
-
                                 </li>
-
                             ))}
-
                         </ol>
-
                     )}
 
                 </div>
 
-
-             
-
-                <button
-                    className="result-btn"
-                    onClick={Results}
-                >
+                <button className="result-btn" onClick={Results}>
                     🎲 &nbsp; Show Results &nbsp; →
                 </button>
 
-
-           
-
-                <div className="result-box">
-
-                    <span>Your Decision</span>
-
-                    <h2>
-                        {result || "—"}
-                    </h2>
-
-                </div>
+                {queue.length > 0 && (
+                    <div className="result-box">
+                        <span>Your Priority Queue</span>
+                        <ol className="queue-list">
+                            {queue.map((item, index) => (
+                                <li key={index}>
+                                    <strong>{ordinal(index + 1)}</strong> &nbsp; {item}
+                                </li>
+                            ))}
+                        </ol>
+                    </div>
+                )}
 
             </div>
 
