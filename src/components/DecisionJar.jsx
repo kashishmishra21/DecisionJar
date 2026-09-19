@@ -41,7 +41,7 @@ function DecisionJar() {
         });
 
         setOption(arr);
-        setQueue([]); // clear old ranking since options changed
+        setQueue([]); 
     }
 
     function reset() {
